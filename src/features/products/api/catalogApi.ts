@@ -36,7 +36,8 @@ function normalizeRawProduct(p: any): ProductItem {
     originalPrice,
     imageUrl: primaryImg,
     categoryName: p.categoryName ?? p.category?.name ?? 'Clean Produce',
-    rating: typeof p.rating === 'number' ? p.rating : 5,
+    rating: typeof p.rating === 'number' ? p.rating : typeof p.averageRating === 'number' ? p.averageRating : 0,
+    reviewCount: typeof p.reviewCount === 'number' ? p.reviewCount : typeof p.reviewsCount === 'number' ? p.reviewsCount : 0,
     soldCount: typeof p.soldCount === 'number' ? p.soldCount : (Number(p.id) * 17) % 80 + 12,
     isAvailable:
       typeof p.isAvailable === 'boolean'

@@ -39,12 +39,13 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
       ? product.originalPrice
       : Math.round(displayPrice * 1.25);
 
-  // Đánh giá 5 sao & 120 lượt review mặc định khớp 100% với mockup
-  const rating = typeof product.rating === 'number' && product.rating > 0 ? product.rating : 5;
+  // Real rating & review count from API data (zero mock fallbacks)
+  const rating =
+    typeof product.rating === 'number' && Number.isFinite(product.rating) ? product.rating : 0;
   const reviewCount =
-    typeof product.reviewCount === 'number' && product.reviewCount > 0
+    typeof product.reviewCount === 'number' && Number.isFinite(product.reviewCount)
       ? product.reviewCount
-      : 120;
+      : 0;
   const roundedRating = Math.round(rating);
   const showBadge = Boolean(product.badge || product.isOrganic);
 
@@ -92,15 +93,18 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
             {product.name}
           </Link>
 
-          {/* Star Rating & Review Count (5 sao & 120 reviews) */}
-          <div className="mt-2 flex items-center gap-1.5" title={`${rating}/5 stars`}>
+          {/* Star Rating & Review Count (Actual backend data) */}
+          <div
+            className="mt-2 flex items-center gap-1.5"
+            title={reviewCount > 0 ? `${rating}/5 stars (${reviewCount} reviews)` : 'No reviews yet'}
+          >
             <div className="flex items-center text-amber-400">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
                   size={14}
                   className={
-                    i < roundedRating
+                    reviewCount > 0 && i < roundedRating
                       ? 'fill-amber-400 text-amber-400'
                       : 'fill-slate-200 text-slate-200'
                   }

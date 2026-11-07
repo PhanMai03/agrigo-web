@@ -8,6 +8,7 @@ import {
   Plus,
   ShieldCheck,
   ShoppingCart,
+  Star,
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MainLayout } from '@/layouts/MainLayout';
@@ -15,6 +16,8 @@ import { useProductDetail } from '@/features/products/api/hooks';
 import { useAddToCart } from '@/features/cart/api/hooks';
 import { useBuyNow } from '@/features/orders/api/hooks';
 import { getPrimaryImage } from '@/features/products/api/productsApi';
+import { ProductReviewsSection } from '@/features/reviews/components/ProductReviewsSection';
+import { useProductReviewSummary } from '@/features/reviews/hooks/useReviews';
 
 const currency = new Intl.NumberFormat('vi-VN', {
   style: 'currency',
@@ -26,6 +29,7 @@ export function ProductDetailPage() {
   const id = Number(useParams().id);
   const navigate = useNavigate();
   const product = useProductDetail(Number.isFinite(id) ? id : undefined);
+  const reviewSummary = useProductReviewSummary(Number.isFinite(id) ? id : undefined);
   const add = useAddToCart();
   const buy = useBuyNow();
   const [quantity, setQuantity] = useState(1);
@@ -165,7 +169,30 @@ export function ProductDetailPage() {
               {item.name}
             </h1>
 
-            <div className="mt-7 flex items-baseline gap-3">
+            {/* Real Review Rating Summary */}
+            <div className="mt-3.5 flex items-center gap-2">
+              <div className="flex items-center text-amber-400">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={15}
+                    className={
+                      star <= Math.round(reviewSummary.data?.average ?? 0)
+                        ? 'fill-amber-400 text-amber-400'
+                        : 'fill-slate-200 text-slate-200'
+                    }
+                  />
+                ))}
+              </div>
+              <span className="text-xs font-semibold text-slate-700">
+                {reviewSummary.data?.average ? reviewSummary.data.average.toFixed(1) : 'No ratings yet'}
+              </span>
+              <span className="text-xs text-slate-400">
+                ({reviewSummary.data?.count ?? 0} reviews)
+              </span>
+            </div>
+
+            <div className="mt-6 flex items-baseline gap-3">
               <span className="text-2xl font-bold text-[#4D0E13]">
                 {currency.format(item.price)}
               </span>
@@ -229,6 +256,9 @@ export function ProductDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Customer Reviews Section */}
+        <ProductReviewsSection productId={item.id} />
       </section>
     </MainLayout>
   );

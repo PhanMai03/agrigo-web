@@ -20,6 +20,7 @@ export interface ProductItem {
   imageUrl: string;
   categoryName?: string;
   rating?: number;
+  reviewCount?: number;
   soldCount?: number;
   isAvailable: boolean;
 }

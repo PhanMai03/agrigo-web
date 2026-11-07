@@ -38,3 +38,4 @@ export interface ChatMessagesParams {
   page?: number;
   perPage?: number;
 }
+
