@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { MainLayout } from '@/layouts/MainLayout';
 import {
   useCart,
@@ -63,20 +62,9 @@ export function CartPage() {
   const remove = useRemoveCartItem();
   const clear = useClearCart();
 
-  const [selected, setSelected] = useState<number[]>([]);
   const items = cart.data?.items ?? [];
-  const allSelected = items.length > 0 && selected.length === items.length;
-
-  const selectedTotal = useMemo(
-    () =>
-      items
-        .filter((item) => selected.includes(item.productId))
-        .reduce((sum, item) => sum + item.subtotal, 0),
-    [items, selected]
-  );
-
-  const toggleAll = () =>
-    setSelected(allSelected ? [] : items.map((item) => item.productId));
+  const totalItems = cart.data?.totalItems ?? 0;
+  const subtotal = cart.data?.subtotal ?? 0;
 
   if (cart.isLoading) {
     return (
@@ -129,20 +117,6 @@ export function CartPage() {
                 >
                   {/* Product Details & Image */}
                   <div className="flex items-center gap-3">
-                    <input
-                      aria-label={`Select ${item.name}`}
-                      checked={selected.includes(item.productId)}
-                      className="h-4 w-4 accent-green-700"
-                      onChange={() =>
-                        setSelected((current) =>
-                          current.includes(item.productId)
-                            ? current.filter((id) => id !== item.productId)
-                            : [...current, item.productId]
-                        )
-                      }
-                      type="checkbox"
-                    />
-
                     <CartItemThumbnail item={item} />
 
                     <div className="min-w-0">
@@ -218,26 +192,16 @@ export function CartPage() {
 
             {items.length > 0 && (
               <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-4 text-xs sm:px-6">
-                <label className="flex items-center gap-2 font-semibold text-gray-700">
-                  <input
-                    checked={allSelected}
-                    className="h-4 w-4 accent-green-700"
-                    onChange={toggleAll}
-                    type="checkbox"
-                  />
-                  <Check className="text-green-700" size={13} />
-                  Select All
-                </label>
                 <button
                   className="flex items-center gap-1 font-semibold text-red-500 hover:text-red-700"
-                  onClick={() => clear.mutate()}
+                  onClick={() => window.confirm('Empty your entire shopping cart?') && clear.mutate()}
                   type="button"
                 >
                   <Trash2 size={14} />
                   Clear Cart
                 </button>
                 <strong className="ml-auto text-gray-800">
-                  Total Item: {cart.data?.totalItems ?? 0}
+                  Total Items: {totalItems}
                 </strong>
               </div>
             )}
@@ -250,15 +214,15 @@ export function CartPage() {
             <div className="mt-7 space-y-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">
-                  Subtotal ({cart.data?.totalItems ?? 0} items)
+                  Subtotal ({totalItems} items)
                 </span>
                 <strong className="text-gray-900">
-                  {currency.format(selected.length ? selectedTotal : cart.data?.subtotal ?? 0)}
+                  {currency.format(subtotal)}
                 </strong>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Delivery Fee</span>
-                <strong className="text-gray-900">Free</strong>
+                <strong className="text-emerald-700 font-bold">Free</strong>
               </div>
             </div>
 
@@ -267,7 +231,7 @@ export function CartPage() {
             <div className="flex justify-between text-base font-extrabold">
               <span>Total Amount</span>
               <span className="text-[#4D0E13]">
-                {currency.format(selected.length ? selectedTotal : cart.data?.subtotal ?? 0)}
+                {currency.format(subtotal)}
               </span>
             </div>
 
