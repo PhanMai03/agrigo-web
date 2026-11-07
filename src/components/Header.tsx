@@ -1,6 +1,16 @@
-import { useState, type FormEvent, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Package, Search, ShoppingCart, UserRound, X } from 'lucide-react';
+import {
+  ChevronDown,
+  LogOut,
+  Menu,
+  Package,
+  Search,
+  Shield,
+  ShoppingCart,
+  UserRound,
+  X,
+} from 'lucide-react';
 import { useLogout } from '@/features/auth/api/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import brandMark from '@/assets/brand/agrigo-mark.png';
@@ -42,6 +52,20 @@ export function Header({
   const logout = useLogout();
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: globalThis.MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -142,32 +166,86 @@ export function Header({
           )}
         </Link>
 
-        {/* User Account / Login */}
+        {/* User Account Dropdown */}
         {user ? (
-          <div className="hidden items-center gap-2 sm:flex">
-            <Link
-              className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition"
-              to="/orders"
-              title="View my orders"
-            >
-              <Package size={17} />
-              <span>Orders</span>
-            </Link>
+          <div className="relative hidden sm:block" ref={dropdownRef}>
             <button
-              className="flex max-w-[150px] items-center gap-2 truncate rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-emerald-50 transition"
-              onClick={() => navigate('/profile')}
+              onClick={() => setDropdownOpen((prev) => !prev)}
+              aria-expanded={dropdownOpen}
+              className="flex items-center gap-2 rounded-xl border border-emerald-900/15 bg-white py-2 pl-2 pr-3 text-sm font-bold text-slate-800 transition hover:border-emerald-600 hover:bg-emerald-50/50 shadow-2xs"
               type="button"
             >
-              <UserRound size={17} />
-              {user.fullName}
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-xs font-black text-emerald-800 shrink-0">
+                {user.fullName.trim().charAt(0).toUpperCase()}
+              </div>
+              <span className="max-w-[130px] truncate">{user.fullName}</span>
+              <ChevronDown
+                size={16}
+                className={`text-slate-400 transition-transform duration-200 ${
+                  dropdownOpen ? 'rotate-180 text-emerald-700' : ''
+                }`}
+              />
             </button>
-            <button
-              className="text-xs font-semibold text-slate-500 hover:text-red-600 transition"
-              onClick={() => logout.mutate()}
-              type="button"
-            >
-              Logout
-            </button>
+
+            {/* Dropdown Menu */}
+            {dropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-60 rounded-2xl border border-emerald-950/10 bg-white p-2 shadow-2xl ring-1 ring-black/5 z-50 animate-fadeIn">
+                <div className="px-3 py-2.5 border-b border-slate-100">
+                  <p className="truncate text-xs font-black text-emerald-950">{user.fullName}</p>
+                  <p className="truncate text-[11px] text-slate-500 mt-0.5">{user.email}</p>
+                  {user.role === 'admin' && (
+                    <span className="mt-1.5 inline-block rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                      Administrator
+                    </span>
+                  )}
+                </div>
+
+                <div className="py-1">
+                  <Link
+                    to="/profile"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 transition"
+                  >
+                    <UserRound size={16} className="text-slate-400" />
+                    <span>My Profile</span>
+                  </Link>
+
+                  <Link
+                    to="/orders"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 transition"
+                  >
+                    <Package size={16} className="text-slate-400" />
+                    <span>My Orders</span>
+                  </Link>
+
+                  {user.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-amber-800 hover:bg-amber-50 transition"
+                    >
+                      <Shield size={16} className="text-amber-600" />
+                      <span>Admin Management</span>
+                    </Link>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-100 pt-1">
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      logout.mutate();
+                    }}
+                    type="button"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition"
+                  >
+                    <LogOut size={16} className="text-rose-500" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <button
@@ -210,24 +288,48 @@ export function Header({
             ))}
 
             {user ? (
-              <>
+              <div className="pt-3 border-t border-slate-100 space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Signed in as <strong className="text-emerald-950">{user.fullName}</strong>
+                </p>
                 <Link
-                  className="text-base font-bold text-slate-700 hover:text-emerald-700 pt-3 border-t border-slate-100 flex items-center gap-2"
-                  to="/orders"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <Package size={18} />
-                  My Orders
-                </Link>
-                <Link
-                  className="text-base font-bold text-emerald-700 flex items-center gap-2"
+                  className="flex items-center gap-2.5 text-sm font-bold text-slate-700 hover:text-emerald-700 py-1"
                   to="/profile"
                   onClick={() => setMenuOpen(false)}
                 >
-                  <UserRound size={18} />
-                  Account: {user.fullName}
+                  <UserRound size={17} />
+                  My Profile
                 </Link>
-              </>
+                <Link
+                  className="flex items-center gap-2.5 text-sm font-bold text-slate-700 hover:text-emerald-700 py-1"
+                  to="/orders"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <Package size={17} />
+                  My Orders
+                </Link>
+                {user.role === 'admin' && (
+                  <Link
+                    className="flex items-center gap-2.5 text-sm font-bold text-amber-800 hover:text-amber-900 py-1"
+                    to="/admin"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Shield size={17} />
+                    Admin Management
+                  </Link>
+                )}
+                <button
+                  className="flex items-center gap-2.5 text-sm font-bold text-rose-600 hover:text-rose-700 py-1 w-full text-left"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    logout.mutate();
+                  }}
+                  type="button"
+                >
+                  <LogOut size={17} />
+                  Sign Out
+                </button>
+              </div>
             ) : (
               <button
                 className="w-fit rounded-xl bg-emerald-700 px-6 py-2.5 text-sm font-bold text-white shadow-sm mt-2"
