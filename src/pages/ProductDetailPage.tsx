@@ -1,23 +1,18 @@
 import { useState } from 'react';
 import {
   ArrowLeft,
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
-  Headphones,
-  Leaf,
   Minus,
   Plus,
-  ShieldCheck,
   ShoppingCart,
   Star,
-  Truck,
+  Zap,
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MainLayout } from '@/layouts/MainLayout';
 import { useProductDetail, useProducts } from '@/features/products/api/hooks';
 import { useAddToCart } from '@/features/cart/api/hooks';
-import { useBuyNow } from '@/features/orders/api/hooks';
 import { getPrimaryImage } from '@/features/products/api/productsApi';
 import { ProductReviewsSection } from '@/features/reviews/components/ProductReviewsSection';
 import { useProductReviewSummary } from '@/features/reviews/hooks/useReviews';
@@ -96,25 +91,26 @@ export function ProductDetailPage() {
   const product = useProductDetail(Number.isFinite(id) ? id : undefined);
   const reviewSummary = useProductReviewSummary(Number.isFinite(id) ? id : undefined);
   const add = useAddToCart();
-  const buy = useBuyNow();
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
   const [thumbStartIndex, setThumbStartIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
+  const [relatedPage, setRelatedPage] = useState(0);
 
   const item = product.data;
 
   // Query related products in the same category
   const relatedQuery = useProducts({
     categoryId: item?.category.id,
-    perPage: 8,
+    perPage: 12,
     status: 'active',
   });
 
-  const relatedProducts = (relatedQuery.data?.data ?? [])
-    .filter((prod) => prod.id !== item?.id)
-    .slice(0, 3);
+  const relatedList = (relatedQuery.data?.data ?? []).filter((prod) => prod.id !== item?.id);
+  const totalRelatedPages = Math.max(1, Math.ceil(relatedList.length / 3));
+  const currentRelatedPage = Math.min(relatedPage, totalRelatedPages - 1);
+  const visibleRelated = relatedList.slice(currentRelatedPage * 3, currentRelatedPage * 3 + 3);
 
   if (product.isLoading) {
     return (
@@ -142,11 +138,14 @@ export function ProductDetailPage() {
   const activeImageId =
     selectedImage?.id ?? images.find((candidate) => candidate.isPrimary)?.id ?? images[0]?.id;
 
-  const buyNow = () =>
-    buy.mutate(
-      { productId: item.id, quantity, paymentMethod: 'cod' },
-      { onSuccess: (result) => navigate(`/orders/${result.order.id}`) }
+  const buyNow = () => {
+    add.mutate(
+      { productId: item.id, quantity },
+      {
+        onSuccess: () => navigate('/checkout'),
+      }
     );
+  };
 
   // Sub-images (Thumbnail) Controls: Show 4 visible images, with arrow buttons only when > 4
   const VISIBLE_COUNT = 4;
@@ -209,11 +208,10 @@ export function ProductDetailPage() {
                         key={thumbnail.id}
                         type="button"
                         onClick={() => setSelectedImageId(thumbnail.id)}
-                        className={`group relative h-20 sm:h-24 w-full overflow-hidden rounded-xl border-2 bg-[#ded8c9]/35 transition-all ${
-                          isSelected
+                        className={`group relative h-20 sm:h-24 w-full overflow-hidden rounded-xl border-2 bg-[#ded8c9]/35 transition-all ${isSelected
                             ? 'border-emerald-700 ring-2 ring-emerald-700/25 shadow-sm'
                             : 'border-slate-200/80 opacity-80 hover:opacity-100 hover:border-slate-400'
-                        }`}
+                          }`}
                         aria-label={`View image ${thumbnail.id}`}
                       >
                         <img
@@ -280,10 +278,11 @@ export function ProductDetailPage() {
               <span className="text-sm text-[#19342b]/50">/ {item.unit}</span>
             </div>
 
-            <p className="mt-7 text-base leading-7 text-[#19342b]/65">
-              {item.description ??
-                'Freshly picked produce from certified local farms. Rich in nutrients and perfect for a healthy everyday table.'}
-            </p>
+            {item.description && (
+              <p className="mt-7 text-base leading-7 text-[#19342b]/70 whitespace-pre-line">
+                {item.description}
+              </p>
+            )}
 
             <div className="mt-8 border-y border-[#19342b]/20 py-5 text-sm">
               <div className="flex justify-between">
@@ -314,27 +313,22 @@ export function ProductDetailPage() {
               </div>
             </div>
 
-            <div className="mt-7 flex gap-3">
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <button
                 className="ink-button flex-1"
                 onClick={() => add.mutate({ productId: item.id, quantity })}
                 type="button"
               >
-                <ShoppingCart size={17} /> Add to basket
+                <ShoppingCart size={17} /> Add to Cart
               </button>
               <button
-                className="border border-[#19342b] px-5 text-xs font-bold uppercase tracking-wider text-[#19342b] hover:bg-[#19342b] hover:text-[#f5f2ea]"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-emerald-950 shadow-md shadow-amber-500/20 transition-all hover:bg-amber-400 hover:-translate-y-0.5 active:translate-y-0"
                 onClick={buyNow}
                 type="button"
-                title="Buy now"
               >
-                <ArrowRight size={16} />
+                <Zap size={16} className="fill-emerald-950" />
+                <span>Buy Now</span>
               </button>
-            </div>
-
-            <div className="mt-7 flex items-center gap-3 text-xs text-[#19342b]/60">
-              <ShieldCheck size={19} className="text-[#c46532]" /> Quality checked. Easy returns
-              within 7 days.
             </div>
           </div>
         </div>
@@ -348,11 +342,10 @@ export function ProductDetailPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab('description')}
-                className={`relative pb-3.5 text-sm sm:text-base font-bold transition-all ${
-                  activeTab === 'description'
+                className={`relative pb-3.5 text-sm sm:text-base font-bold transition-all ${activeTab === 'description'
                     ? 'text-emerald-800'
                     : 'text-gray-400 hover:text-gray-600'
-                }`}
+                  }`}
               >
                 Description
                 {activeTab === 'description' && (
@@ -363,11 +356,10 @@ export function ProductDetailPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab('reviews')}
-                className={`relative pb-3.5 text-sm sm:text-base font-bold transition-all ${
-                  activeTab === 'reviews'
+                className={`relative pb-3.5 text-sm sm:text-base font-bold transition-all ${activeTab === 'reviews'
                     ? 'text-emerald-800'
                     : 'text-gray-400 hover:text-gray-600'
-                }`}
+                  }`}
               >
                 Reviews ({reviewSummary.data?.count ?? 0})
                 {activeTab === 'reviews' && (
@@ -379,29 +371,32 @@ export function ProductDetailPage() {
             {/* Tab Contents */}
             <div className="mt-6">
               {activeTab === 'description' ? (
-                <div className="text-gray-600 space-y-4">
-                  <p className="leading-relaxed text-sm">
-                    {item.description ??
-                      'Our agricultural products are carefully cultivated using organic farming methods without harmful chemicals or pesticides. Handpicked at peak ripeness to ensure the best taste and highest nutritional value.'}
-                  </p>
-                  <ul className="space-y-2.5 text-xs sm:text-sm text-gray-700 font-medium pt-2">
-                    <li className="flex items-center gap-2.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                      100% Organic &amp; Non-GMO verified
-                    </li>
-                    <li className="flex items-center gap-2.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                      No chemical preservatives or synthetic additives
-                    </li>
-                    <li className="flex items-center gap-2.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                      Rich in essential vitamins, minerals &amp; dietary antioxidants
-                    </li>
-                    <li className="flex items-center gap-2.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                      Harvested fresh daily from certified organic farms in Vietnam
-                    </li>
-                  </ul>
+                <div className="space-y-4 text-slate-700 leading-relaxed text-sm">
+                  {item.description ? (
+                    <p className="whitespace-pre-line">{item.description}</p>
+                  ) : (
+                    <p className="italic text-slate-400">No description provided for this product.</p>
+                  )}
+                  <div className="mt-6 border-t border-slate-100 pt-4 grid grid-cols-2 gap-3 text-xs sm:text-sm">
+                    <div>
+                      <span className="text-slate-400">Category: </span>
+                      <span className="font-semibold text-slate-800">{item.category.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Unit: </span>
+                      <span className="font-semibold text-slate-800">{item.unit}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Available Stock: </span>
+                      <span className="font-semibold text-slate-800">{item.quantity} {item.unit}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Status: </span>
+                      <span className="font-semibold capitalize text-emerald-700">
+                        {item.status === 'active' ? 'In Stock' : item.status}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <ProductReviewsSection productId={item.id} />
@@ -416,12 +411,36 @@ export function ProductDetailPage() {
                 <h3 className="text-base font-extrabold text-gray-900">You May Also Like</h3>
                 <p className="text-[11px] text-gray-400">Same category recommendations</p>
               </div>
-              <Link
-                to={`/products?categoryId=${item.category.id}`}
-                className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition"
-              >
-                View All
-              </Link>
+              <div className="flex items-center gap-2">
+                {relatedList.length > 3 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={currentRelatedPage <= 0}
+                      onClick={() => setRelatedPage((prev) => Math.max(0, prev - 1))}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-2xs transition hover:border-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 disabled:opacity-30 disabled:pointer-events-none"
+                      aria-label="Previous related products"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentRelatedPage >= totalRelatedPages - 1}
+                      onClick={() => setRelatedPage((prev) => Math.min(totalRelatedPages - 1, prev + 1))}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-2xs transition hover:border-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 disabled:opacity-30 disabled:pointer-events-none"
+                      aria-label="Next related products"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                )}
+                <Link
+                  to={`/products?categoryId=${item.category.id}`}
+                  className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition"
+                >
+                  View All
+                </Link>
+              </div>
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-3">
@@ -429,12 +448,12 @@ export function ProductDetailPage() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="aspect-square animate-pulse rounded-2xl bg-gray-100" />
                 ))
-              ) : relatedProducts.length === 0 ? (
+              ) : visibleRelated.length === 0 ? (
                 <p className="col-span-3 py-8 text-center text-xs text-gray-400">
                   No other items in {item.category.name}.
                 </p>
               ) : (
-                relatedProducts.map((relProduct) => (
+                visibleRelated.map((relProduct) => (
                   <RelatedProductMiniCard
                     key={relProduct.id}
                     product={relProduct}
@@ -444,49 +463,6 @@ export function ProductDetailPage() {
               )}
             </div>
           </aside>
-        </div>
-
-        {/* Bottom Feature Badges Bar */}
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 rounded-3xl border border-emerald-950/10 bg-[#f9fbf9] p-6 sm:p-7 shadow-2xs">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
-              <Leaf size={22} />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-gray-900">100% Organic</h4>
-              <p className="text-xs text-gray-500">Naturally grown and chemical-free.</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
-              <Truck size={22} />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-gray-900">Fast Delivery</h4>
-              <p className="text-xs text-gray-500">Quick delivery to your doorstep.</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
-              <ShieldCheck size={22} />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-gray-900">Secure Payment</h4>
-              <p className="text-xs text-gray-500">Safe via COD and VNPay portal.</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-              <Headphones size={22} />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-gray-900">24/7 Support</h4>
-              <p className="text-xs text-gray-500">Always here to support you.</p>
-            </div>
-          </div>
         </div>
       </section>
     </MainLayout>

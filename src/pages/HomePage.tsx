@@ -17,8 +17,9 @@ import { productImage } from '@/lib/images';
 
 export function HomePage() {
   const [categoryPage, setCategoryPage] = useState(0);
+  const [productPage, setProductPage] = useState(0);
   const categories = useCategories({ page: 1, perPage: 50 });
-  const products = useProducts({ page: 1, perPage: 10, sort: 'newest' });
+  const products = useProducts({ page: 1, perPage: 25, sort: 'newest' });
   const add = useAddToCart();
 
   const categoryList = categories.data?.data ?? [];
@@ -27,6 +28,14 @@ export function HomePage() {
   const visibleCategories = categoryList.slice(
     currentCategoryPage * 4,
     currentCategoryPage * 4 + 4
+  );
+
+  const productList = products.data?.data ?? [];
+  const totalProductPages = Math.max(1, Math.ceil(productList.length / 5));
+  const currentProductPage = Math.min(productPage, totalProductPages - 1);
+  const visibleProducts = productList.slice(
+    currentProductPage * 5,
+    currentProductPage * 5 + 5
   );
 
   return (
@@ -128,16 +137,42 @@ export function HomePage() {
                 Featured Products
               </h2>
             </div>
-            <Link
-              className="group inline-flex items-center gap-1 text-sm font-bold text-emerald-900 transition-colors hover:text-emerald-600"
-              to="/products"
-            >
-              <span>View all</span>
-              <ArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-1" />
-            </Link>
+            <div className="flex items-center gap-3.5">
+              {productList.length > 5 && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={currentProductPage <= 0}
+                    onClick={() => setProductPage((prev) => Math.max(0, prev - 1))}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200/90 bg-white text-slate-600 shadow-2xs transition hover:border-emerald-600 hover:text-emerald-900 hover:bg-emerald-50/60 disabled:opacity-30 disabled:pointer-events-none"
+                    aria-label="Previous products"
+                    title="Previous"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={currentProductPage >= totalProductPages - 1}
+                    onClick={() => setProductPage((prev) => Math.min(totalProductPages - 1, prev + 1))}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200/90 bg-white text-slate-600 shadow-2xs transition hover:border-emerald-600 hover:text-emerald-900 hover:bg-emerald-50/60 disabled:opacity-30 disabled:pointer-events-none"
+                    aria-label="Next products"
+                    title="Next"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+              <Link
+                className="group inline-flex items-center gap-1 text-sm font-bold text-emerald-900 transition-colors hover:text-emerald-600"
+                to="/products"
+              >
+                <span>View all</span>
+                <ArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-1" />
+              </Link>
+            </div>
           </div>
           <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {(products.data?.data ?? []).slice(0, 5).map((product) => (
+            {(visibleProducts.length > 0 ? visibleProducts : productList.slice(0, 5)).map((product) => (
               <ProductCard
                 key={product.id}
                 product={{
