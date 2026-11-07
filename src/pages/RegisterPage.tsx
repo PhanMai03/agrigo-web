@@ -1,0 +1,10 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
+import { z } from 'zod';
+import { useRegister } from '@/features/auth/api/hooks';
+
+const schema = z.object({ fullName: z.string().min(1, 'Please enter your full name'), email: z.string().email('Invalid email address'), password: z.string().min(8, 'Password must be at least 8 characters'), phone: z.string().optional() });
+type FormValues = z.infer<typeof schema>;
+
+export function RegisterPage() { const navigate = useNavigate(); const registerMutation = useRegister(); const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) }); const submit = (values: FormValues) => registerMutation.mutate(values, { onSuccess: () => navigate(`/verify-email?email=${encodeURIComponent(values.email)}`) }); return <div className="w-full max-w-md rounded-2xl border border-earth-100 bg-white p-6 shadow-sm sm:p-8"><h1 className="text-3xl font-extrabold text-primary-900">Create Account</h1><form className="mt-6 space-y-3" onSubmit={handleSubmit(submit)}>{([['fullName','Full name','text'],['email','Email','email'],['phone','Phone number','tel'],['password','Password','password']] as const).map(([name,label,type]) => <label className="block text-sm font-semibold" key={name}>{label}<input {...register(name)} className="mt-1 w-full rounded-xl border border-earth-200 px-4 py-3" type={type} />{errors[name] && <span className="text-xs text-red-600">{errors[name]?.message}</span>}</label>)}{registerMutation.isError && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{registerMutation.error.message}</p>}<button className="w-full rounded-xl bg-primary-700 px-4 py-3 font-bold text-white disabled:opacity-60" disabled={registerMutation.isPending} type="submit">Sign Up</button></form><p className="mt-5 text-center text-sm">Already have an account? <Link className="font-semibold text-primary-700" to="/login">Sign In</Link></p></div>; }

@@ -1,0 +1,8 @@
+import { Sparkles } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import brandMark from '@/assets/brand/agrigo-mark.png';
+
+export function AuthLayout({ children }: { children: ReactNode }) {
+  return <div className="grid min-h-screen bg-[#F8F9FA] lg:grid-cols-[1.05fr_.95fr]"><aside className="relative hidden overflow-hidden bg-emerald-950 p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-16"><div className="absolute -right-28 top-20 h-96 w-96 rounded-full border border-emerald-400/20" /><div className="absolute bottom-0 left-0 h-1/2 w-1/2 bg-emerald-700/30 blur-3xl" /><Link className="relative inline-flex w-fit items-center gap-3" to="/"><span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white p-2 shadow-lg"><img src={brandMark} alt="AgriGo" className="h-full w-full object-contain" /></span><span className="text-2xl font-extrabold tracking-tight text-white">Agri<span className="text-emerald-300">Go</span></span></Link><div className="relative max-w-xl"><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.25em] text-emerald-300"><Sparkles size={14} /> Farm to table, reimagined</p><h1 className="mt-7 text-6xl font-extrabold leading-[.9] tracking-tight xl:text-8xl">Good food starts with good <span className="text-emerald-300">ingredients.</span></h1><p className="mt-8 max-w-md text-base leading-7 text-emerald-100/70">Fresh produce from trusted local growers, delivered to your table.</p></div><p className="relative text-[10px] uppercase tracking-widest text-emerald-100/50">© {new Date().getFullYear()} AgriGo</p></aside><main className="flex items-center justify-center p-5 sm:p-10">{children}</main></div>;
+}

@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', Inter, ui-sans-serif, system-ui, sans-serif;
+    color: #102a1f;
+    background: #ffffff;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply m-0 min-w-[320px] bg-white font-sans antialiased;
+  }
+
+  button, a, input, select, textarea { @apply transition-all duration-300; }
+}
+
+@layer components {
+  .layout-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .display { font-family: 'Plus Jakarta Sans', Inter, ui-sans-serif, system-ui, sans-serif; }
+  .eyebrow { @apply text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-700; }
+  .rule { @apply border-t border-emerald-900/10; }
+  .editorial-link { @apply inline-flex items-center gap-2 font-bold text-emerald-800 hover:text-emerald-600; }
+  .ink-button { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition-all hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-xl hover:shadow-emerald-200; }
+  .paper-input { @apply rounded-xl border border-emerald-900/15 bg-white px-3 py-3 outline-none transition-colors placeholder:text-emerald-900/40 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
