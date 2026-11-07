@@ -98,7 +98,9 @@ export function CheckoutPage() {
       },
       {
         onSuccess: (result) => {
-          if (!result.payment?.paymentUrl) {
+          if (result.payment?.paymentUrl) {
+            window.location.assign(result.payment.paymentUrl);
+          } else {
             navigate(`/orders/${result.order.id}`);
           }
         },

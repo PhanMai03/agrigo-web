@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type MouseEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Search, ShoppingCart, UserRound, X } from 'lucide-react';
+import { Menu, Package, Search, ShoppingCart, UserRound, X } from 'lucide-react';
 import { useLogout } from '@/features/auth/api/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import brandMark from '@/assets/brand/agrigo-mark.png';
@@ -145,8 +145,16 @@ export function Header({
         {/* User Account / Login */}
         {user ? (
           <div className="hidden items-center gap-2 sm:flex">
+            <Link
+              className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition"
+              to="/orders"
+              title="View my orders"
+            >
+              <Package size={17} />
+              <span>Orders</span>
+            </Link>
             <button
-              className="flex max-w-[150px] items-center gap-2 truncate rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-700 hover:bg-emerald-50 transition"
+              className="flex max-w-[150px] items-center gap-2 truncate rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-emerald-50 transition"
               onClick={() => navigate('/profile')}
               type="button"
             >
@@ -202,13 +210,24 @@ export function Header({
             ))}
 
             {user ? (
-              <Link
-                className="text-base font-bold text-emerald-700 pt-3 border-t border-slate-100"
-                to="/profile"
-                onClick={() => setMenuOpen(false)}
-              >
-                Account: {user.fullName}
-              </Link>
+              <>
+                <Link
+                  className="text-base font-bold text-slate-700 hover:text-emerald-700 pt-3 border-t border-slate-100 flex items-center gap-2"
+                  to="/orders"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <Package size={18} />
+                  My Orders
+                </Link>
+                <Link
+                  className="text-base font-bold text-emerald-700 flex items-center gap-2"
+                  to="/profile"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <UserRound size={18} />
+                  Account: {user.fullName}
+                </Link>
+              </>
             ) : (
               <button
                 className="w-fit rounded-xl bg-emerald-700 px-6 py-2.5 text-sm font-bold text-white shadow-sm mt-2"

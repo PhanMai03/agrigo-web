@@ -15,6 +15,7 @@ import { CartPage } from '@/pages/CartPage';
 import { CheckoutPage } from '@/pages/CheckoutPage';
 import { OrderHistoryPage } from '@/pages/OrderHistoryPage';
 import { OrderDetailPage } from '@/pages/OrderDetailPage';
+import { PaymentResultPage } from '@/pages/PaymentResultPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AboutPage } from '@/pages/AboutPage';
 import { ContactPage } from '@/pages/ContactPage';
@@ -55,6 +56,7 @@ export function AppRoutes() {
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/cart" element={<ProtectedRoute roles={['customer', 'admin']}><CartPage /></ProtectedRoute>} />
       <Route path="/checkout" element={<ProtectedRoute roles={['customer', 'admin']}><CheckoutPage /></ProtectedRoute>} />
+      <Route path="/payment/result" element={<PaymentResultPage />} />
       <Route path="/orders" element={<ProtectedRoute roles={['customer', 'admin']}><OrderHistoryPage /></ProtectedRoute>} />
       <Route path="/orders/:id" element={<ProtectedRoute roles={['customer', 'admin']}><OrderDetailPage /></ProtectedRoute>} />
 
