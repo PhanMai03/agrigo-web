@@ -35,10 +35,10 @@ function RelatedProductMiniCard({
   const imageUrl = getPrimaryImage(product.images) || productImage(product.id);
 
   return (
-    <div className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-100 bg-white p-2.5 shadow-2xs transition hover:-translate-y-1 hover:border-emerald-400 hover:shadow-md">
+    <div className="group flex items-center gap-3.5 py-3 transition-colors">
       <Link
         to={`/products/${product.id}`}
-        className="relative block aspect-square w-full overflow-hidden rounded-xl bg-gray-50"
+        className="relative h-16 w-16 sm:h-18 sm:w-18 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-gray-50"
       >
         <img
           src={imageUrl}
@@ -50,34 +50,32 @@ function RelatedProductMiniCard({
         />
       </Link>
 
-      <div className="mt-2 flex flex-1 flex-col justify-between">
-        <Link
-          to={`/products/${product.id}`}
-          className="line-clamp-1 text-xs font-bold text-gray-900 hover:text-emerald-700 transition"
-          title={product.name}
-        >
-          {product.name}
-        </Link>
-
-        {/* 5-star mini indicator */}
-        <div className="mt-1 flex items-center text-amber-400">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Star key={star} size={10} className="fill-amber-400 text-amber-400" />
-          ))}
+      <div className="flex flex-1 flex-col justify-between min-w-0">
+        <div>
+          <Link
+            to={`/products/${product.id}`}
+            className="line-clamp-1 text-sm font-bold text-gray-900 hover:text-emerald-700 transition"
+            title={product.name}
+          >
+            {product.name}
+          </Link>
+          <p className="text-xs text-gray-400">
+            {product.quantity > 0 ? `In stock • ${product.unit}` : 'Out of stock'}
+          </p>
         </div>
 
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-xs font-black text-[#4D0E13]">
+        <div className="mt-1.5 flex items-center justify-between">
+          <span className="text-sm font-black text-[#4D0E13]">
             {currency.format(product.price)}
           </span>
 
           <button
             onClick={onAddToCart}
             type="button"
-            className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-800 transition hover:bg-emerald-700 hover:text-white"
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-800 transition hover:bg-emerald-700 hover:text-white active:scale-95"
             title="Add to cart"
           >
-            <ShoppingCart size={11} />
+            <ShoppingCart size={13} />
           </button>
         </div>
       </div>
@@ -405,7 +403,7 @@ export function ProductDetailPage() {
           </div>
 
           {/* Right Column: You May Also Like Card */}
-          <aside className="h-fit rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+          <aside className="h-fit rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-sm">
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
               <div>
                 <h3 className="text-base font-extrabold text-gray-900">You May Also Like</h3>
@@ -443,13 +441,19 @@ export function ProductDetailPage() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="mt-2 divide-y divide-gray-100">
               {relatedQuery.isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="aspect-square animate-pulse rounded-2xl bg-gray-100" />
+                  <div key={i} className="flex items-center gap-3 py-3 animate-pulse">
+                    <div className="h-16 w-16 rounded-xl bg-gray-100 shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 w-3/4 rounded bg-gray-100" />
+                      <div className="h-3 w-1/2 rounded bg-gray-100" />
+                    </div>
+                  </div>
                 ))
               ) : visibleRelated.length === 0 ? (
-                <p className="col-span-3 py-8 text-center text-xs text-gray-400">
+                <p className="py-8 text-center text-xs text-gray-400">
                   No other items in {item.category.name}.
                 </p>
               ) : (
