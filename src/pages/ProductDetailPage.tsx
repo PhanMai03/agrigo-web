@@ -4,26 +4,91 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  Headphones,
+  Leaf,
   Minus,
   Plus,
   ShieldCheck,
   ShoppingCart,
   Star,
+  Truck,
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MainLayout } from '@/layouts/MainLayout';
-import { useProductDetail } from '@/features/products/api/hooks';
+import { useProductDetail, useProducts } from '@/features/products/api/hooks';
 import { useAddToCart } from '@/features/cart/api/hooks';
 import { useBuyNow } from '@/features/orders/api/hooks';
 import { getPrimaryImage } from '@/features/products/api/productsApi';
 import { ProductReviewsSection } from '@/features/reviews/components/ProductReviewsSection';
 import { useProductReviewSummary } from '@/features/reviews/hooks/useReviews';
+import { productImage } from '@/lib/images';
+import type { Product } from '@/types/api';
 
 const currency = new Intl.NumberFormat('vi-VN', {
   style: 'currency',
   currency: 'VND',
   maximumFractionDigits: 0,
 });
+
+function RelatedProductMiniCard({
+  product,
+  onAddToCart,
+}: {
+  product: Product;
+  onAddToCart: () => void;
+}) {
+  const imageUrl = getPrimaryImage(product.images) || productImage(product.id);
+
+  return (
+    <div className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-100 bg-white p-2.5 shadow-2xs transition hover:-translate-y-1 hover:border-emerald-400 hover:shadow-md">
+      <Link
+        to={`/products/${product.id}`}
+        className="relative block aspect-square w-full overflow-hidden rounded-xl bg-gray-50"
+      >
+        <img
+          src={imageUrl}
+          alt={product.name}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          onError={(event) => {
+            (event.target as HTMLImageElement).src = productImage(product.id);
+          }}
+        />
+      </Link>
+
+      <div className="mt-2 flex flex-1 flex-col justify-between">
+        <Link
+          to={`/products/${product.id}`}
+          className="line-clamp-1 text-xs font-bold text-gray-900 hover:text-emerald-700 transition"
+          title={product.name}
+        >
+          {product.name}
+        </Link>
+
+        {/* 5-star mini indicator */}
+        <div className="mt-1 flex items-center text-amber-400">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Star key={star} size={10} className="fill-amber-400 text-amber-400" />
+          ))}
+        </div>
+
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-xs font-black text-[#4D0E13]">
+            {currency.format(product.price)}
+          </span>
+
+          <button
+            onClick={onAddToCart}
+            type="button"
+            className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-800 transition hover:bg-emerald-700 hover:text-white"
+            title="Add to cart"
+          >
+            <ShoppingCart size={11} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function ProductDetailPage() {
   const id = Number(useParams().id);
@@ -32,9 +97,24 @@ export function ProductDetailPage() {
   const reviewSummary = useProductReviewSummary(Number.isFinite(id) ? id : undefined);
   const add = useAddToCart();
   const buy = useBuyNow();
+
   const [quantity, setQuantity] = useState(1);
   const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
   const [thumbStartIndex, setThumbStartIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
+
+  const item = product.data;
+
+  // Query related products in the same category
+  const relatedQuery = useProducts({
+    categoryId: item?.category.id,
+    perPage: 8,
+    status: 'active',
+  });
+
+  const relatedProducts = (relatedQuery.data?.data ?? [])
+    .filter((prod) => prod.id !== item?.id)
+    .slice(0, 3);
 
   if (product.isLoading) {
     return (
@@ -46,7 +126,7 @@ export function ProductDetailPage() {
     );
   }
 
-  if (!product.data) {
+  if (!item) {
     return (
       <MainLayout>
         <p className="w-full max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8 text-center text-rose-600 font-semibold">
@@ -56,7 +136,6 @@ export function ProductDetailPage() {
     );
   }
 
-  const item = product.data;
   const images = item.images ?? [];
   const selectedImage = images.find((image) => image.id === selectedImageId);
   const image = selectedImage?.url ?? getPrimaryImage(images);
@@ -93,6 +172,7 @@ export function ProductDetailPage() {
           <ArrowLeft size={15} /> Back to harvest
         </Link>
 
+        {/* Product Hero Showcase */}
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
           <div>
             {/* Main Featured Product Image */}
@@ -163,6 +243,7 @@ export function ProductDetailPage() {
             )}
           </div>
 
+          {/* Product Details Column */}
           <div className="max-w-lg">
             <p className="eyebrow">{item.category.name}</p>
             <h1 className="display mt-5 text-6xl leading-[.9] text-[#19342b] sm:text-8xl">
@@ -245,6 +326,7 @@ export function ProductDetailPage() {
                 className="border border-[#19342b] px-5 text-xs font-bold uppercase tracking-wider text-[#19342b] hover:bg-[#19342b] hover:text-[#f5f2ea]"
                 onClick={buyNow}
                 type="button"
+                title="Buy now"
               >
                 <ArrowRight size={16} />
               </button>
@@ -257,8 +339,155 @@ export function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Customer Reviews Section */}
-        <ProductReviewsSection productId={item.id} />
+        {/* Dual Section: Description & Reviews Tabs (Left) + You May Also Like (Right) */}
+        <div className="mt-14 grid gap-8 lg:grid-cols-[minmax(0,1fr)_390px]">
+          {/* Left Column: Description & Reviews Tabs */}
+          <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white p-6 sm:p-8 shadow-sm">
+            {/* Tabs Header */}
+            <div className="flex border-b border-gray-100 gap-8">
+              <button
+                type="button"
+                onClick={() => setActiveTab('description')}
+                className={`relative pb-3.5 text-sm sm:text-base font-bold transition-all ${
+                  activeTab === 'description'
+                    ? 'text-emerald-800'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                Description
+                {activeTab === 'description' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-emerald-700" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('reviews')}
+                className={`relative pb-3.5 text-sm sm:text-base font-bold transition-all ${
+                  activeTab === 'reviews'
+                    ? 'text-emerald-800'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                Reviews ({reviewSummary.data?.count ?? 0})
+                {activeTab === 'reviews' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-emerald-700" />
+                )}
+              </button>
+            </div>
+
+            {/* Tab Contents */}
+            <div className="mt-6">
+              {activeTab === 'description' ? (
+                <div className="text-gray-600 space-y-4">
+                  <p className="leading-relaxed text-sm">
+                    {item.description ??
+                      'Our agricultural products are carefully cultivated using organic farming methods without harmful chemicals or pesticides. Handpicked at peak ripeness to ensure the best taste and highest nutritional value.'}
+                  </p>
+                  <ul className="space-y-2.5 text-xs sm:text-sm text-gray-700 font-medium pt-2">
+                    <li className="flex items-center gap-2.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                      100% Organic &amp; Non-GMO verified
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                      No chemical preservatives or synthetic additives
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                      Rich in essential vitamins, minerals &amp; dietary antioxidants
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                      Harvested fresh daily from certified organic farms in Vietnam
+                    </li>
+                  </ul>
+                </div>
+              ) : (
+                <ProductReviewsSection productId={item.id} />
+              )}
+            </div>
+          </div>
+
+          {/* Right Column: You May Also Like Card */}
+          <aside className="h-fit rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+              <div>
+                <h3 className="text-base font-extrabold text-gray-900">You May Also Like</h3>
+                <p className="text-[11px] text-gray-400">Same category recommendations</p>
+              </div>
+              <Link
+                to={`/products?categoryId=${item.category.id}`}
+                className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition"
+              >
+                View All
+              </Link>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              {relatedQuery.isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="aspect-square animate-pulse rounded-2xl bg-gray-100" />
+                ))
+              ) : relatedProducts.length === 0 ? (
+                <p className="col-span-3 py-8 text-center text-xs text-gray-400">
+                  No other items in {item.category.name}.
+                </p>
+              ) : (
+                relatedProducts.map((relProduct) => (
+                  <RelatedProductMiniCard
+                    key={relProduct.id}
+                    product={relProduct}
+                    onAddToCart={() => add.mutate({ productId: relProduct.id, quantity: 1 })}
+                  />
+                ))
+              )}
+            </div>
+          </aside>
+        </div>
+
+        {/* Bottom Feature Badges Bar */}
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 rounded-3xl border border-emerald-950/10 bg-[#f9fbf9] p-6 sm:p-7 shadow-2xs">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+              <Leaf size={22} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900">100% Organic</h4>
+              <p className="text-xs text-gray-500">Naturally grown and chemical-free.</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+              <Truck size={22} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900">Fast Delivery</h4>
+              <p className="text-xs text-gray-500">Quick delivery to your doorstep.</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+              <ShieldCheck size={22} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900">Secure Payment</h4>
+              <p className="text-xs text-gray-500">Safe via COD and VNPay portal.</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+              <Headphones size={22} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900">24/7 Support</h4>
+              <p className="text-xs text-gray-500">Always here to support you.</p>
+            </div>
+          </div>
+        </div>
       </section>
     </MainLayout>
   );
