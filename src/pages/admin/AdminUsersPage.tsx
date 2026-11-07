@@ -26,6 +26,7 @@ import {
   useUpdateUser,
 } from '@/features/admin/api/hooks';
 import { AdminLayout } from '@/layouts/AdminLayout';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import type { User } from '@/types/api';
 
 const emptyForm = {
@@ -273,6 +274,7 @@ export function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<number | null>(null);
   const [inspectUserId, setInspectUserId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [form, setForm] = useState(emptyForm);
 
   const users = useAdminUsers({
@@ -643,10 +645,7 @@ export function AdminUsersPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() =>
-                              window.confirm(`Delete user ${user.fullName}?`) &&
-                              remove.mutate(user.id)
-                            }
+                            onClick={() => setDeleteTarget(user)}
                             aria-label={`Delete ${user.fullName}`}
                             title="Delete user"
                             className="rounded-xl p-2 text-rose-600 transition hover:bg-rose-50"
@@ -715,6 +714,25 @@ export function AdminUsersPage() {
             onEdit={(userToEdit) => openEdit(userToEdit)}
           />
         )}
+
+        {/* Custom Delete User Confirmation Modal */}
+        <ConfirmModal
+          isOpen={deleteTarget !== null}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            if (deleteTarget) {
+              remove.mutate(deleteTarget.id, {
+                onSettled: () => setDeleteTarget(null),
+              });
+            }
+          }}
+          title="Delete User Account?"
+          description={`Are you sure you want to permanently delete user "${deleteTarget?.fullName}" (${deleteTarget?.email})? This action cannot be undone.`}
+          confirmText="Yes, Delete User"
+          cancelText="Cancel"
+          variant="danger"
+          isLoading={remove.isPending}
+        />
       </div>
     </AdminLayout>
   );

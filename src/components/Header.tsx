@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  ChevronDown,
   LogOut,
   Menu,
   Package,
@@ -174,22 +173,14 @@ export function Header({
               aria-expanded={dropdownOpen}
               aria-label="Account menu"
               title={user.fullName}
-              className="flex items-center gap-1.5 rounded-full border border-emerald-900/15 bg-white p-1 pr-2 transition hover:border-emerald-600 hover:bg-emerald-50/50 shadow-2xs group"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-700 text-sm font-black text-white transition hover:opacity-90 hover:ring-4 hover:ring-emerald-100 focus:outline-none overflow-hidden"
               type="button"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-700 text-sm font-black text-white shadow-xs overflow-hidden shrink-0">
-                {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  user.fullName.trim().charAt(0).toUpperCase()
-                )}
-              </div>
-              <ChevronDown
-                size={14}
-                className={`text-slate-400 transition-transform duration-200 group-hover:text-emerald-700 ${
-                  dropdownOpen ? 'rotate-180 text-emerald-700' : ''
-                }`}
-              />
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt={user.fullName} className="h-full w-full object-cover" />
+              ) : (
+                user.fullName.trim().charAt(0).toUpperCase()
+              )}
             </button>
 
             {/* Dropdown Menu */}

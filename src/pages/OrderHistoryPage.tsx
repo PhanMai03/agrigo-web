@@ -148,24 +148,29 @@ export function OrderHistoryPage() {
         </div>
 
         {/* Status Filter Tabs */}
-        <div className="mt-8 flex gap-2 overflow-x-auto border-b border-gray-200 pb-3">
-          {TABS.map((tab) => {
-            const active = selectedStatus === tab.value;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setSelectedStatus(tab.value)}
-                type="button"
-                className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold transition ${
-                  active
-                    ? 'bg-emerald-700 text-white shadow-sm'
-                    : 'bg-white text-gray-600 hover:bg-emerald-50 hover:text-emerald-900 border border-gray-100'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+        <div className="mt-8 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="flex overflow-x-auto border-b border-gray-100">
+            {TABS.map((tab) => {
+              const active = selectedStatus === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => setSelectedStatus(tab.value)}
+                  type="button"
+                  className={`relative flex-1 min-w-[110px] py-4 px-4 text-center text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                    active
+                      ? 'text-emerald-800'
+                      : 'text-gray-500 hover:text-emerald-700 hover:bg-emerald-50/30'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  {active && (
+                    <span className="absolute bottom-0 left-3 right-3 h-[3px] rounded-full bg-emerald-700" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Orders List */}
