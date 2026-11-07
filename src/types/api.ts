@@ -21,9 +21,34 @@ export interface CategoryQuery { page?: number; perPage?: number; q?: string }
 export type ProductStatus = 'active' | 'inactive';
 export interface ProductImage { id: number; url: string; publicId: string; isPrimary: boolean; sortOrder: number }
 export interface UpdateProductImageInput { isPrimary?: boolean; sortOrder?: number }
-export interface Product { id: number; name: string; slug: string; description: string | null; price: number; quantity: number; unit: string; status: ProductStatus; category: { id: number; name: string; slug: string }; images: ProductImage[]; createdAt: string; updatedAt: string }
+export interface Product {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: number;
+  discountPercent?: number;
+  averageRating?: number | null;
+  soldCount?: number;
+  quantity: number;
+  unit: string;
+  status: ProductStatus;
+  category: { id: number; name: string; slug: string };
+  images: ProductImage[];
+  createdAt: string;
+  updatedAt: string;
+}
 export interface ProductQuery { page?: number; perPage?: number; q?: string; categoryId?: number; minPrice?: number; maxPrice?: number; sort?: 'newest' | 'price_asc' | 'price_desc' | 'name'; status?: ProductStatus }
-export interface ProductInput { categoryId: number; name: string; description?: string | null; price: number; quantity?: number; unit?: string; status?: ProductStatus }
+export interface ProductInput {
+  categoryId: number;
+  name: string;
+  description?: string | null;
+  price: number;
+  discountPercent?: number;
+  quantity?: number;
+  unit?: string;
+  status?: ProductStatus;
+}
 export interface InventoryHistory { id: number; productId: number; delta: number; quantityAfter: number; reason: 'import' | 'adjustment' | 'order_placed' | 'order_cancelled'; orderId: number | null; createdBy: number | null; notes: string | null; createdAt: string }
 
 export interface CartItem {
@@ -31,11 +56,14 @@ export interface CartItem {
   name: string;
   unit: string;
   price: number;
+  discountPercent?: number;
+  averageRating?: number | null;
+  soldCount?: number;
   quantity: number;
   subtotal: number;
   stock: number;
   available: boolean;
-  imageUrl?: string;
+  imageUrl?: string | null;
   image?: string;
   thumbnail?: string;
   images?: ProductImage[];
@@ -54,7 +82,7 @@ export interface PaymentLink { paymentUrl: string; txnRef: string; expiresAt: st
 export interface CheckoutResult { order: Order; payment: PaymentLink | null }
 export interface CheckoutInput { paymentMethod: PaymentMethod; shipping?: ShippingInput; note?: string }
 export interface BuyNowInput extends CheckoutInput { productId: number; quantity: number }
-export interface OrderQuery { page?: number; perPage?: number; orderStatus?: OrderStatus; paymentStatus?: PaymentStatus }
+export interface OrderQuery { page?: number; perPage?: number; orderStatus?: OrderStatus; paymentStatus?: PaymentStatus; userId?: number }
 export interface CancelOrderInput { reason?: string }
 export interface UpdateQuantityInput { quantity: number; notes?: string }
 

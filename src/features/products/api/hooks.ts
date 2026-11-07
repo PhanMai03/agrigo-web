@@ -6,11 +6,13 @@ export interface CategoriesQuery { page?: number; perPage?: number; q?: string }
 export interface ProductsQuery { page?: number; perPage?: number; q?: string; categoryId?: number; status?: 'active' | 'inactive'; minPrice?: number; maxPrice?: number; sort?: 'newest' | 'price_asc' | 'price_desc' | 'name' }
 
 export function useCategories(params: CategoriesQuery = {}) {
-  return useQuery({ queryKey: ['categories', params], queryFn: async () => (await apiClient.get<PaginatedResponse<Category>>('/categories', { params })).data });
+  const query = { page: 1, perPage: 15, ...params };
+  return useQuery({ queryKey: ['categories', query], queryFn: async () => (await apiClient.get<PaginatedResponse<Category>>('/categories', { params: query })).data });
 }
 
 export function useProducts(params: ProductsQuery = {}) {
-  return useQuery({ queryKey: ['products', params], queryFn: async () => (await apiClient.get<PaginatedResponse<Product>>('/products', { params })).data });
+  const query = { page: 1, perPage: 15, ...params };
+  return useQuery({ queryKey: ['products', query], queryFn: async () => (await apiClient.get<PaginatedResponse<Product>>('/products', { params: query })).data });
 }
 
 export function useProductDetail(id: number | undefined) {

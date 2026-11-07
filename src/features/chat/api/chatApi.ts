@@ -23,8 +23,9 @@ export const chatApi = {
    * GET /api/chat/rooms
    */
   async getChatRooms(params: ChatRoomsParams = {}): Promise<PaginatedResponse<ChatRoom>> {
+    const query = { page: 1, perPage: 15, ...params };
     const res = await apiClient.get<PaginatedResponse<ChatRoom>>('/chat/rooms', {
-      params,
+      params: query,
     });
     return res.data;
   },
@@ -37,9 +38,10 @@ export const chatApi = {
     roomId: number,
     params: ChatMessagesParams = {}
   ): Promise<PaginatedResponse<ChatMessage>> {
+    const query = { page: 1, perPage: 15, ...params };
     const res = await apiClient.get<PaginatedResponse<ChatMessage>>(
       `/chat/rooms/${roomId}/messages`,
-      { params }
+      { params: query }
     );
     return res.data;
   },

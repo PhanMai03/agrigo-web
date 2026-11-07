@@ -182,11 +182,9 @@ export function HomePage() {
                   price: product.price,
                   unit: product.unit,
                   images: product.images,
-                  originalPrice: (product as any).originalPrice,
-                  isOrganic: (product as any).isOrganic,
-                  badge: (product as any).badge,
-                  rating: (product as any).rating,
-                  reviewCount: (product as any).reviewCount,
+                  discountPercent: product.discountPercent,
+                  averageRating: product.averageRating,
+                  soldCount: product.soldCount,
                 }}
                 onAddToCart={() => add.mutate({ productId: product.id, quantity: 1 })}
               />

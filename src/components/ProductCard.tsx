@@ -12,9 +12,12 @@ export type Product = {
   images?: ProductImage[];
   price: number;
   originalPrice?: number;
+  discountPercent?: number;
   unit?: string;
-  rating?: number;
+  rating?: number | null;
+  averageRating?: number | null;
   reviewCount?: number;
+  soldCount?: number;
   isOrganic?: boolean;
   badge?: string;
 };
@@ -33,21 +36,29 @@ const currency = new Intl.NumberFormat('vi-VN', {
 export function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const displayPrice = product.price;
 
-  // Dữ liệu giá gốc mặc định khi API chưa có (fix cứng ~1.25x so với giá bán)
+  // Discount & Original price from API
+  const discountPercent =
+    typeof product.discountPercent === 'number' && product.discountPercent > 0
+      ? product.discountPercent
+      : undefined;
+
   const originalPrice =
     typeof product.originalPrice === 'number' && product.originalPrice > displayPrice
       ? product.originalPrice
-      : Math.round(displayPrice * 1.25);
+      : discountPercent
+      ? Math.round(displayPrice / (1 - discountPercent / 100))
+      : undefined;
 
-  // Real rating & review count from API data (zero mock fallbacks)
+  // Real rating from API (backend returns averageRating)
+  const rawRating = product.averageRating ?? product.rating;
   const rating =
-    typeof product.rating === 'number' && Number.isFinite(product.rating) ? product.rating : 0;
+    typeof rawRating === 'number' && Number.isFinite(rawRating) ? rawRating : 0;
   const reviewCount =
     typeof product.reviewCount === 'number' && Number.isFinite(product.reviewCount)
       ? product.reviewCount
       : 0;
   const roundedRating = Math.round(rating);
-  const showBadge = Boolean(product.badge || product.isOrganic);
+  const showBadge = Boolean(product.badge || product.isOrganic || discountPercent);
 
   return (
     <motion.article
@@ -67,13 +78,17 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
           src={product.image ?? getPrimaryImage(product.images ?? [])}
         />
 
-        {/* Badge */}
-        {showBadge && (
+        {/* Badges: Discount or Organic */}
+        {discountPercent ? (
+          <span className="absolute left-3 top-3 inline-flex items-center rounded-lg bg-rose-600 px-2 py-0.5 text-[11px] font-extrabold text-white shadow-sm">
+            -{discountPercent}%
+          </span>
+        ) : showBadge ? (
           <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-900/85 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-100 shadow-sm backdrop-blur-md">
             <Leaf size={12} className="text-emerald-400" />
             {product.badge ?? 'Organic'}
           </span>
-        )}
+        ) : null}
       </Link>
 
       {/* Product Meta Body */}
@@ -93,31 +108,39 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
             {product.name}
           </Link>
 
-          {/* Star Rating & Review Count (Actual backend data) */}
+          {/* Star Rating & Review Count (Actual backend averageRating) */}
           <div
-            className="mt-2 flex items-center gap-1.5"
-            title={reviewCount > 0 ? `${rating}/5 stars (${reviewCount} reviews)` : 'No reviews yet'}
+            className="mt-2 flex items-center justify-between"
+            title={rating > 0 ? `${rating.toFixed(1)}/5 stars` : 'No reviews yet'}
           >
-            <div className="flex items-center text-amber-400">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={14}
-                  className={
-                    reviewCount > 0 && i < roundedRating
-                      ? 'fill-amber-400 text-amber-400'
-                      : 'fill-slate-200 text-slate-200'
-                  }
-                />
-              ))}
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    size={14}
+                    className={
+                      rating > 0 && i < roundedRating
+                        ? 'fill-amber-400 text-amber-400'
+                        : 'fill-slate-200 text-slate-200'
+                    }
+                  />
+                ))}
+              </div>
+              <span className="text-xs font-semibold text-slate-400">
+                ({reviewCount > 0 ? reviewCount : rating > 0 ? rating.toFixed(1) : 0})
+              </span>
             </div>
-            <span className="text-xs font-semibold text-slate-400">
-              ({reviewCount})
-            </span>
+
+            {typeof product.soldCount === 'number' && product.soldCount > 0 && (
+              <span className="text-[11px] text-slate-400">
+                Sold {product.soldCount}
+              </span>
+            )}
           </div>
 
-          {/* Price & Original Price: Đồng bộ 2 dòng cố định cho mọi card */}
-          <div className="mt-2.5">
+          {/* Price & Original Price */}
+          <div className="mt-2.5 min-h-[46px]">
             <div className="flex items-baseline gap-1">
               <span className="text-xl font-bold text-[#4D0E13]">
                 {currency.format(displayPrice)}
@@ -128,13 +151,19 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
                 </span>
               )}
             </div>
-            <div className="mt-0.5 text-xs font-semibold text-slate-400 line-through">
-              {currency.format(originalPrice)}
-            </div>
+            {originalPrice ? (
+              <div className="mt-0.5 text-xs font-semibold text-slate-400 line-through">
+                {currency.format(originalPrice)}
+              </div>
+            ) : (
+              <div className="mt-0.5 text-xs font-semibold text-transparent select-none">
+                -
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Add to Cart Button (Dạng pill bo tròn tròn trịa theo mockup) */}
+        {/* Add to Cart Button */}
         <motion.button
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-emerald-700 py-2.5 px-4 text-xs sm:text-sm font-bold text-white transition-all hover:bg-emerald-800 shadow-sm hover:shadow-md hover:shadow-emerald-900/15 active:scale-[0.98]"
           onClick={() => onAddToCart?.(product)}

@@ -38,6 +38,7 @@ type Form = {
   name: string;
   description: string;
   price: number;
+  discountPercent: number;
   quantity: number;
   unit: string;
   status: Product['status'];
@@ -48,6 +49,7 @@ const empty: Form = {
   name: '',
   description: '',
   price: 0,
+  discountPercent: 0,
   quantity: 0,
   unit: 'kg',
   status: 'active',
@@ -123,6 +125,7 @@ export function AdminProductsPage() {
           name: form.name.trim(),
           description: form.description ? form.description.trim() : null,
           price: Math.max(0, Math.round(Number(form.price) || 0)),
+          discountPercent: Math.max(0, Math.min(100, Math.round(Number(form.discountPercent) || 0))),
           unit: form.unit.trim() || 'kg',
           status: form.status,
         };
@@ -148,6 +151,7 @@ export function AdminProductsPage() {
           name: form.name.trim(),
           description: form.description ? form.description.trim() : null,
           price: Math.max(0, Math.round(Number(form.price) || 0)),
+          discountPercent: Math.max(0, Math.min(100, Math.round(Number(form.discountPercent) || 0))),
           quantity: Math.max(0, Math.round(Number(form.quantity) || 0)),
           unit: form.unit.trim() || 'kg',
           status: form.status,
@@ -183,6 +187,7 @@ export function AdminProductsPage() {
       name: product.name,
       description: product.description ?? '',
       price: product.price,
+      discountPercent: product.discountPercent ?? 0,
       quantity: product.quantity,
       unit: product.unit,
       status: product.status,
@@ -351,7 +356,7 @@ export function AdminProductsPage() {
                   </span>
                 </div>
 
-                <div className="mt-4 grid gap-5 sm:grid-cols-3">
+                <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                   {/* Col 1: Price */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700">
@@ -375,7 +380,36 @@ export function AdminProductsPage() {
                     </p>
                   </div>
 
-                  {/* Col 2: Unit */}
+                  {/* Col 2: Discount Percent */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700">
+                      Discount (%)
+                    </label>
+                    <div className="relative mt-1.5">
+                      <input
+                        className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-sm font-bold text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
+                        min={0}
+                        max={100}
+                        placeholder="0 - 100"
+                        type="number"
+                        value={form.discountPercent || ''}
+                        onChange={(event) =>
+                          setForm({
+                            ...form,
+                            discountPercent: Math.max(0, Math.min(100, Number(event.target.value))),
+                          })
+                        }
+                      />
+                      <span className="pointer-events-none absolute right-3.5 top-2.5 text-xs font-bold text-slate-400">
+                        %
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      {form.discountPercent > 0 ? `Sale off ${form.discountPercent}%` : 'No discount'}
+                    </p>
+                  </div>
+
+                  {/* Col 3: Unit */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700">
                       Unit (kg, item, box...) <span className="text-red-500">*</span>
@@ -390,7 +424,7 @@ export function AdminProductsPage() {
                     </div>
                     {/* Quick Select Unit Pills */}
                     <div className="mt-2 flex flex-wrap items-center gap-1">
-                      <span className="text-[10px] text-slate-400 mr-0.5">Quick pick:</span>
+                      <span className="text-[10px] text-slate-400 mr-0.5">Quick:</span>
                       {['kg', 'item', 'box', 'bunch', 'piece', 'bag', 'g', 'pack'].map((u) => (
                         <button
                           key={u}
@@ -408,7 +442,7 @@ export function AdminProductsPage() {
                     </div>
                   </div>
 
-                  {/* Col 3: Stock */}
+                  {/* Col 4: Stock */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700">
                       Stock Quantity <span className="text-red-500">*</span>
@@ -427,7 +461,7 @@ export function AdminProductsPage() {
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] text-slate-500">
-                      Available quantity in warehouse
+                      Available quantity
                     </p>
                   </div>
                 </div>
@@ -742,11 +776,26 @@ export function AdminProductsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 font-medium text-slate-600">{product.category.name}</td>
-                        <td className="px-6 py-4 font-black text-emerald-900">
-                          {product.price.toLocaleString('vi-VN')} ₫
+                        <td className="px-6 py-4">
+                          <div className="font-black text-emerald-900">
+                            {product.price.toLocaleString('vi-VN')} ₫
+                          </div>
+                          {(product.discountPercent ?? 0) > 0 && (
+                            <span className="inline-block mt-0.5 rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 border border-rose-200">
+                              -{product.discountPercent}%
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4 font-bold text-slate-700">
-                          {product.quantity} <span className="text-xs text-slate-400 font-normal">{product.unit}</span>
+                          <div>
+                            {product.quantity}{' '}
+                            <span className="text-xs text-slate-400 font-normal">{product.unit}</span>
+                          </div>
+                          {typeof product.soldCount === 'number' && product.soldCount > 0 && (
+                            <div className="text-[11px] text-slate-400 font-normal">
+                              Sold: {product.soldCount}
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <span

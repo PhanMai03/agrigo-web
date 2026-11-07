@@ -6,7 +6,8 @@ export const ordersQueryKey = ['orders'] as const;
 export interface OrdersQuery { page?: number; perPage?: number; orderStatus?: OrderStatus; paymentStatus?: PaymentStatus }
 
 export function useOrders(params: OrdersQuery = {}) {
-  return useQuery({ queryKey: [...ordersQueryKey, params], queryFn: async () => (await apiClient.get<PaginatedResponse<Order>>('/orders', { params })).data });
+  const query = { page: 1, perPage: 15, ...params };
+  return useQuery({ queryKey: [...ordersQueryKey, query], queryFn: async () => (await apiClient.get<PaginatedResponse<Order>>('/orders', { params: query })).data });
 }
 
 export function useOrderDetail(id: number | undefined) {

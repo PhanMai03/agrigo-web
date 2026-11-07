@@ -254,7 +254,10 @@ export function ProductDetailPage() {
                     key={star}
                     size={15}
                     className={
-                      star <= Math.round(reviewSummary.data?.average ?? 0)
+                      star <=
+                      Math.round(
+                        reviewSummary.data?.average ?? item.averageRating ?? 0
+                      )
                         ? 'fill-amber-400 text-amber-400'
                         : 'fill-slate-200 text-slate-200'
                     }
@@ -262,10 +265,14 @@ export function ProductDetailPage() {
                 ))}
               </div>
               <span className="text-xs font-semibold text-slate-700">
-                {reviewSummary.data?.average ? reviewSummary.data.average.toFixed(1) : 'No ratings yet'}
+                {reviewSummary.data?.average
+                  ? reviewSummary.data.average.toFixed(1)
+                  : item.averageRating
+                  ? item.averageRating.toFixed(1)
+                  : 'No ratings yet'}
               </span>
               <span className="text-xs text-slate-400">
-                ({reviewSummary.data?.count ?? 0} reviews)
+                ({reviewSummary.data?.count ?? (item.averageRating ? '1+' : 0)} reviews)
               </span>
             </div>
 
@@ -274,6 +281,18 @@ export function ProductDetailPage() {
                 {currency.format(item.price)}
               </span>
               <span className="text-sm text-[#19342b]/50">/ {item.unit}</span>
+              {(item.discountPercent ?? 0) > 0 && (
+                <>
+                  <span className="text-sm text-slate-400 line-through">
+                    {currency.format(
+                      Math.round(item.price / (1 - (item.discountPercent ?? 0) / 100))
+                    )}
+                  </span>
+                  <span className="rounded-md bg-rose-600 px-2 py-0.5 text-xs font-bold text-white">
+                    -{item.discountPercent}%
+                  </span>
+                </>
+              )}
             </div>
 
             {item.description && (
@@ -289,6 +308,14 @@ export function ProductDetailPage() {
                   {item.quantity} {item.unit}
                 </strong>
               </div>
+              {typeof item.soldCount === 'number' && item.soldCount > 0 && (
+                <div className="mt-2 flex justify-between">
+                  <span className="text-[#19342b]/55">Sold</span>
+                  <strong>
+                    {item.soldCount} {item.unit}
+                  </strong>
+                </div>
+              )}
               <div className="mt-3 flex items-center gap-3">
                 <span className="text-[#19342b]/55">Quantity</span>
                 <div className="ml-auto flex items-center border border-[#19342b]/25">

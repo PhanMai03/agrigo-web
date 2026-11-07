@@ -773,14 +773,12 @@ export function AllProductsPage() {
                   name: product.name,
                   category: product.category?.name,
                   price: product.price,
-                  originalPrice: (product as any).originalPrice,
                   unit: product.unit,
                   images: product.images,
                   image: product.images?.[0]?.url,
-                  isOrganic: (product as any).isOrganic,
-                  badge: (product as any).badge,
-                  rating: (product as any).rating,
-                  reviewCount: (product as any).reviewCount,
+                  discountPercent: product.discountPercent,
+                  averageRating: product.averageRating,
+                  soldCount: product.soldCount,
                 }}
                 onAddToCart={() => handleAddToCart(product)}
               />

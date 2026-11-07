@@ -17,9 +17,10 @@ export const reviewsApi = {
     productId: number,
     params: ReviewsQueryParams = {}
   ): Promise<PaginatedResponse<Review>> {
+    const query = { page: 1, perPage: 15, ...params };
     const res = await apiClient.get<PaginatedResponse<Review>>(
       `/products/${productId}/reviews`,
-      { params }
+      { params: query }
     );
     return res.data;
   },
