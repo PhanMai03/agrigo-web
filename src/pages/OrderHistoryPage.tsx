@@ -21,6 +21,7 @@ import {
 } from '@/features/orders/api/hooks';
 import { useProductDetail } from '@/features/products/api/hooks';
 import { productImage } from '@/lib/images';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import type { OrderItem, OrderStatus } from '@/types/api';
 
 const currency = new Intl.NumberFormat('vi-VN', {
@@ -107,6 +108,7 @@ function OrderStatusBadge({ status }: { status: OrderStatus }) {
 
 export function OrderHistoryPage() {
   const [selectedStatus, setSelectedStatus] = useState<'' | OrderStatus>('');
+  const [cancelTarget, setCancelTarget] = useState<{ id: number; orderCode: string } | null>(null);
   const orders = useOrders({
     page: 1,
     perPage: 30,
@@ -288,11 +290,7 @@ export function OrderHistoryPage() {
 
                       {order.orderStatus === 'pending' && (
                         <button
-                          onClick={() => {
-                            if (window.confirm(`Cancel order ${order.orderCode}?`)) {
-                              cancel.mutate({ id: order.id });
-                            }
-                          }}
+                          onClick={() => setCancelTarget({ id: order.id, orderCode: order.orderCode })}
                           disabled={cancel.isPending}
                           className="rounded-xl border border-gray-200 px-3.5 py-2 text-xs font-bold text-gray-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 transition disabled:opacity-50"
                           type="button"
@@ -315,6 +313,26 @@ export function OrderHistoryPage() {
             })
           )}
         </div>
+
+        {/* Custom Cancel Order Modal */}
+        <ConfirmModal
+          isOpen={cancelTarget !== null}
+          onClose={() => setCancelTarget(null)}
+          onConfirm={() => {
+            if (cancelTarget) {
+              cancel.mutate(
+                { id: cancelTarget.id },
+                { onSettled: () => setCancelTarget(null) }
+              );
+            }
+          }}
+          title="Cancel This Order?"
+          description={`Are you sure you want to cancel order ${cancelTarget?.orderCode}? The reservation on items will be restocked.`}
+          confirmText="Yes, Cancel Order"
+          cancelText="Keep Order"
+          variant="warning"
+          isLoading={cancel.isPending}
+        />
       </section>
     </MainLayout>
   );

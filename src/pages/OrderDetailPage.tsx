@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   AlertCircle,
@@ -20,6 +21,7 @@ import {
 } from '@/features/orders/api/hooks';
 import { useProductDetail } from '@/features/products/api/hooks';
 import { productImage } from '@/lib/images';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import type { OrderStatus } from '@/types/api';
 
 const currency = new Intl.NumberFormat('vi-VN', {
@@ -97,6 +99,7 @@ function OrderStatusBadge({ status }: { status: OrderStatus }) {
 
 export function OrderDetailPage() {
   const id = Number(useParams().id);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const order = useOrderDetail(Number.isFinite(id) ? id : undefined);
   const cancel = useCancelOrder();
   const retry = useRetryVNPay();
@@ -177,11 +180,7 @@ export function OrderDetailPage() {
 
             {item.orderStatus === 'pending' && (
               <button
-                onClick={() => {
-                  if (window.confirm(`Cancel order ${item.orderCode}?`)) {
-                    cancel.mutate({ id: item.id });
-                  }
-                }}
+                onClick={() => setShowCancelConfirm(true)}
                 disabled={cancel.isPending}
                 className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition disabled:opacity-50"
                 type="button"
@@ -337,6 +336,24 @@ export function OrderDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Custom Cancel Order Modal */}
+        <ConfirmModal
+          isOpen={showCancelConfirm}
+          onClose={() => setShowCancelConfirm(false)}
+          onConfirm={() => {
+            cancel.mutate(
+              { id: item.id },
+              { onSettled: () => setShowCancelConfirm(false) }
+            );
+          }}
+          title="Cancel This Order?"
+          description={`Are you sure you want to cancel order ${item.orderCode}? The produce stock will be released.`}
+          confirmText="Yes, Cancel Order"
+          cancelText="Keep Order"
+          variant="warning"
+          isLoading={cancel.isPending}
+        />
       </section>
     </MainLayout>
   );

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { MainLayout } from '@/layouts/MainLayout';
@@ -9,6 +10,7 @@ import {
 } from '@/features/cart/api/hooks';
 import { useProductDetail } from '@/features/products/api/hooks';
 import { productImage } from '@/lib/images';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import type { CartItem } from '@/types/api';
 
 const currency = new Intl.NumberFormat('vi-VN', {
@@ -61,6 +63,9 @@ export function CartPage() {
   const update = useUpdateCartItem();
   const remove = useRemoveCartItem();
   const clear = useClearCart();
+
+  const [deleteTarget, setDeleteTarget] = useState<CartItem | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const items = cart.data?.items ?? [];
   const totalItems = cart.data?.totalItems ?? 0;
@@ -180,8 +185,8 @@ export function CartPage() {
                   {/* Remove Button */}
                   <button
                     aria-label={`Remove ${item.name}`}
-                    className="w-fit rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                    onClick={() => remove.mutate(item.productId)}
+                    className="w-fit rounded-lg p-2 text-gray-400 hover:bg-rose-50 hover:text-rose-600 transition"
+                    onClick={() => setDeleteTarget(item)}
                     type="button"
                   >
                     <Trash2 size={16} />
@@ -193,8 +198,8 @@ export function CartPage() {
             {items.length > 0 && (
               <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-4 text-xs sm:px-6">
                 <button
-                  className="flex items-center gap-1 font-semibold text-red-500 hover:text-red-700"
-                  onClick={() => window.confirm('Empty your entire shopping cart?') && clear.mutate()}
+                  className="flex items-center gap-1.5 font-semibold text-rose-500 hover:text-rose-700 transition"
+                  onClick={() => setShowClearConfirm(true)}
                   type="button"
                 >
                   <Trash2 size={14} />
@@ -252,6 +257,42 @@ export function CartPage() {
             </Link>
           </aside>
         </div>
+
+        {/* Custom Remove Single Item Modal */}
+        <ConfirmModal
+          isOpen={deleteTarget !== null}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            if (deleteTarget) {
+              remove.mutate(deleteTarget.productId, {
+                onSettled: () => setDeleteTarget(null),
+              });
+            }
+          }}
+          title="Remove Item from Cart?"
+          description={`Are you sure you want to remove "${deleteTarget?.name}" from your shopping cart?`}
+          confirmText="Yes, Remove"
+          cancelText="Keep Item"
+          variant="danger"
+          isLoading={remove.isPending}
+        />
+
+        {/* Custom Clear Entire Cart Modal */}
+        <ConfirmModal
+          isOpen={showClearConfirm}
+          onClose={() => setShowClearConfirm(false)}
+          onConfirm={() => {
+            clear.mutate(undefined, {
+              onSettled: () => setShowClearConfirm(false),
+            });
+          }}
+          title="Empty Shopping Cart?"
+          description="Are you sure you want to remove all items currently in your cart? This action cannot be undone."
+          confirmText="Yes, Clear All"
+          cancelText="Cancel"
+          variant="danger"
+          isLoading={clear.isPending}
+        />
       </section>
     </MainLayout>
   );
