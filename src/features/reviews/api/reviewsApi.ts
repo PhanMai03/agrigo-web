@@ -73,3 +73,4 @@ export const reviewsApi = {
     await apiClient.delete<ApiResponse<null>>(`/reviews/${reviewId}`);
   },
 };
+

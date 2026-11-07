@@ -1,10 +1,15 @@
 import { useMemo, useState } from 'react';
 import {
   AlertTriangle,
+  Calendar,
   Check,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  Mail,
+  MapPin,
   Pencil,
+  Phone,
   Search,
   Shield,
   Trash2,
@@ -14,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import {
+  useAdminUserDetail,
   useAdminUsers,
   useCreateUser,
   useDeleteUser,
@@ -63,12 +69,210 @@ function SkeletonRows() {
   );
 }
 
+function UserDetailDrawer({
+  userId,
+  onClose,
+  onEdit,
+}: {
+  userId: number;
+  onClose: () => void;
+  onEdit: (user: User) => void;
+}) {
+  const detail = useAdminUserDetail(userId);
+  const user = detail.data;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex justify-end bg-emerald-950/30 backdrop-blur-sm transition-all"
+      onClick={onClose}
+    >
+      <div
+        className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl transition-all"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between border-b border-emerald-950/10 px-6 py-4">
+          <div>
+            <h3 className="font-extrabold text-emerald-950">User Profile Details</h3>
+            <p className="text-xs text-slate-500">Fetched via GET /api/users/{userId}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Drawer Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {detail.isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+              <p className="text-xs font-semibold text-slate-500">Loading user data...</p>
+            </div>
+          ) : detail.isError || !user ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
+              <AlertTriangle className="mx-auto mb-2 text-rose-600" size={24} />
+              <p className="text-sm font-bold text-rose-800">Failed to load user</p>
+              <p className="mt-1 text-xs text-rose-600">User ID {userId} may not exist or has been deleted.</p>
+            </div>
+          ) : (
+            <>
+              {/* Profile Card */}
+              <div className="flex items-center gap-4 rounded-2xl border border-emerald-950/10 bg-emerald-50/40 p-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-xl font-black text-white shadow-sm">
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.fullName}
+                      className="h-16 w-16 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    initials(user.fullName)
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-emerald-950">{user.fullName}</h4>
+                  <p className="text-xs font-mono font-semibold text-emerald-700">Account #{user.id}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <span
+                      className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+                        user.role === 'admin'
+                          ? 'border-amber-200 bg-amber-50 text-amber-800'
+                          : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                      }`}
+                    >
+                      {user.role === 'admin' ? 'Administrator' : 'Customer'}
+                    </span>
+                    <span
+                      className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+                        user.status === 'active'
+                          ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                          : 'border-rose-200 bg-rose-50 text-rose-800'
+                      }`}
+                    >
+                      {user.status === 'active' ? 'Active' : 'Locked'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Email Verification status */}
+              <div
+                className={`flex items-center justify-between rounded-xl border p-3.5 ${
+                  user.emailVerifiedAt
+                    ? 'border-emerald-200 bg-emerald-50/50 text-emerald-900'
+                    : 'border-amber-200 bg-amber-50/50 text-amber-900'
+                }`}
+              >
+                <div className="flex items-center gap-2 text-xs font-bold">
+                  {user.emailVerifiedAt ? (
+                    <>
+                      <Check size={16} className="text-emerald-700" />
+                      Email Verified
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle size={16} className="text-amber-700" />
+                      Email Not Verified
+                    </>
+                  )}
+                </div>
+                {user.emailVerifiedAt && (
+                  <span className="text-[11px] font-medium text-emerald-700">
+                    {new Date(user.emailVerifiedAt).toLocaleDateString('vi-VN')}
+                  </span>
+                )}
+              </div>
+
+              {/* Contact Information */}
+              <div className="rounded-2xl border border-emerald-950/10 bg-white p-4 space-y-3.5 shadow-sm">
+                <h5 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Contact Details</h5>
+                <div className="flex items-start gap-3">
+                  <Mail size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-slate-500">Email Address</p>
+                    <p className="break-all text-sm font-semibold text-emerald-950">{user.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Phone size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-slate-500">Phone Number</p>
+                    <p className="text-sm font-semibold text-emerald-950">{user.phone || 'Not provided'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <MapPin size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-slate-500">Saved Address</p>
+                    <p className="text-sm font-semibold text-emerald-950">{user.address || 'No address saved'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* System Audit Information */}
+              <div className="rounded-2xl border border-emerald-950/10 bg-white p-4 space-y-3.5 shadow-sm">
+                <h5 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Account Timestamps</h5>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5 text-slate-500">
+                    <Calendar size={14} /> Registered On
+                  </span>
+                  <span className="font-semibold text-emerald-950">
+                    {user.createdAt ? new Date(user.createdAt).toLocaleString('vi-VN') : 'Unknown'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5 text-slate-500">
+                    <Calendar size={14} /> Last Profile Update
+                  </span>
+                  <span className="font-semibold text-emerald-950">
+                    {user.updatedAt ? new Date(user.updatedAt).toLocaleString('vi-VN') : 'Unknown'}
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Drawer Footer */}
+        {user && (
+          <div className="flex items-center gap-3 border-t border-emerald-950/10 p-4 bg-slate-50">
+            <button
+              type="button"
+              onClick={() => {
+                onEdit(user);
+                onClose();
+              }}
+              className="flex-1 rounded-xl bg-emerald-700 py-2.5 text-center text-xs font-bold text-white shadow-sm hover:bg-emerald-800"
+            >
+              Edit This User
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border border-emerald-950/15 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AdminUsersPage() {
   const [q, setQ] = useState('');
   const [role, setRole] = useState<'' | User['role']>('');
   const [status, setStatus] = useState<'' | User['status']>('');
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<number | null>(null);
+  const [inspectUserId, setInspectUserId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
 
   const users = useAdminUsers({
@@ -421,6 +625,15 @@ export function AdminUsersPage() {
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
+                            onClick={() => setInspectUserId(user.id)}
+                            aria-label={`View details of ${user.fullName}`}
+                            title="Inspect user details"
+                            className="rounded-xl p-2 text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-900"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => openEdit(user)}
                             aria-label={`Edit ${user.fullName}`}
                             title="Edit user"
@@ -493,6 +706,15 @@ export function AdminUsersPage() {
             </div>
           </div>
         </div>
+
+        {/* User Detail Drawer */}
+        {inspectUserId !== null && (
+          <UserDetailDrawer
+            userId={inspectUserId}
+            onClose={() => setInspectUserId(null)}
+            onEdit={(userToEdit) => openEdit(userToEdit)}
+          />
+        )}
       </div>
     </AdminLayout>
   );

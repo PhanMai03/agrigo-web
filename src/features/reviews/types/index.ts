@@ -39,3 +39,4 @@ export interface ReviewsQueryParams {
   page?: number;
   perPage?: number;
 }
+

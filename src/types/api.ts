@@ -44,3 +44,28 @@ export interface BuyNowInput extends CheckoutInput { productId: number; quantity
 export interface OrderQuery { page?: number; perPage?: number; orderStatus?: OrderStatus; paymentStatus?: PaymentStatus }
 export interface CancelOrderInput { reason?: string }
 export interface UpdateQuantityInput { quantity: number; notes?: string }
+
+export interface RefundItem {
+  paymentId: number;
+  txnRef: string;
+  providerTxnNo: string | null;
+  bankCode: string | null;
+  amount: number;
+  paidAt: string | null;
+  refundStatus: 'pending' | 'refunded';
+  refundReason: string | null;
+  refundedAt: string | null;
+  refundedBy: number | null;
+  order: {
+    id: number;
+    orderCode: string;
+    orderStatus: OrderStatus;
+    paymentStatus: PaymentStatus;
+  };
+}
+
+export interface RefundsQuery {
+  page?: number;
+  perPage?: number;
+  status?: 'pending' | 'refunded' | 'all';
+}

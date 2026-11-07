@@ -520,3 +520,4 @@ export function ProductReviewsSection({ productId }: ProductReviewsSectionProps)
     </div>
   );
 }
+

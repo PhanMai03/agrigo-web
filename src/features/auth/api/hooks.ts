@@ -25,6 +25,16 @@ export function useLogout() {
   return useMutation({ mutationFn: async () => { const refreshToken = localStorage.getItem('agri-go.refresh-token'); if (refreshToken) await apiClient.post('/auth/logout', { refreshToken }); logout(); } });
 }
 
+export function useLogoutAll() {
+  const logout = useAuthStore((state) => state.logout);
+  return useMutation({
+    mutationFn: async () => {
+      await apiClient.post('/auth/logout-all');
+      logout();
+    },
+  });
+}
+
 export function useVerifyEmail() { return useMutation({ mutationFn: (body: { email: string; code: string }) => apiClient.post('/auth/verify-email', body) }); }
 export function useForgotPassword() { return useMutation({ mutationFn: (body: { email: string }) => apiClient.post('/auth/forgot-password', body) }); }
 export function useResetPassword() { return useMutation({ mutationFn: (body: { email: string; code: string; newPassword: string }) => apiClient.post('/auth/reset-password', body) }); }

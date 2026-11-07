@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/apiClient';
 import { useToastStore } from '@/stores/toastStore';
-import type { ApiResponse, Category, InventoryHistory, Order, PaginatedResponse, Product, ProductImage, User } from '@/types/api';
+import type { ApiResponse, Category, InventoryHistory, Order, PaginatedResponse, Product, ProductImage, RefundItem, RefundsQuery, User } from '@/types/api';
 
 const notify = (message: string) => useToastStore.getState().push({ type: 'success', message });
 const fail = (error: any) => {
@@ -41,3 +41,31 @@ export function useAdminUsers(params: { page?: number; perPage?: number; q?: str
 export function useCreateUser() { const qc = useQueryClient(); return useMutation({ mutationFn: (body: { fullName: string; email: string; password: string; phone?: string; role?: 'admin' | 'customer'; status?: 'active' | 'locked' }) => apiClient.post<ApiResponse<User>>('/users', body), onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); notify('User created successfully.'); }, onError: fail }); }
 export function useUpdateUser() { const qc = useQueryClient(); return useMutation({ mutationFn: ({ id, ...body }: { id: number; fullName?: string; password?: string; phone?: string; role?: 'admin' | 'customer'; status?: 'active' | 'locked' }) => apiClient.put<ApiResponse<User>>(`/users/${id}`, body), onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); notify('User updated.'); }, onError: fail }); }
 export function useDeleteUser() { const qc = useQueryClient(); return useMutation({ mutationFn: (id: number) => apiClient.delete(`/users/${id}`), onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); notify('User deleted.'); }, onError: fail }); }
+
+export function useAdminUserDetail(id: number | undefined) {
+  return useQuery({
+    queryKey: ['admin-user-detail', id],
+    enabled: id !== undefined,
+    queryFn: async () => (await apiClient.get<ApiResponse<User>>(`/users/${id}`)).data.data,
+  });
+}
+
+export function useRefundQueue(params: RefundsQuery = {}) {
+  return useQuery({
+    queryKey: ['admin-refunds', params],
+    queryFn: async () => (await apiClient.get<PaginatedResponse<RefundItem>>('/payments/refunds', { params })).data,
+  });
+}
+
+export function useProcessPaymentRefund() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (paymentId: number) => apiClient.post<ApiResponse<RefundItem>>(`/payments/${paymentId}/refunded`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-refunds'] });
+      qc.invalidateQueries({ queryKey: ['admin-orders'] });
+      notify('Payment refund payout marked as completed.');
+    },
+    onError: fail,
+  });
+}
