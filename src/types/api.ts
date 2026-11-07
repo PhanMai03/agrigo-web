@@ -26,7 +26,20 @@ export interface ProductQuery { page?: number; perPage?: number; q?: string; cat
 export interface ProductInput { categoryId: number; name: string; description?: string | null; price: number; quantity?: number; unit?: string; status?: ProductStatus }
 export interface InventoryHistory { id: number; productId: number; delta: number; quantityAfter: number; reason: 'import' | 'adjustment' | 'order_placed' | 'order_cancelled'; orderId: number | null; createdBy: number | null; notes: string | null; createdAt: string }
 
-export interface CartItem { productId: number; name: string; unit: string; price: number; quantity: number; subtotal: number; stock: number; available: boolean }
+export interface CartItem {
+  productId: number;
+  name: string;
+  unit: string;
+  price: number;
+  quantity: number;
+  subtotal: number;
+  stock: number;
+  available: boolean;
+  imageUrl?: string;
+  image?: string;
+  thumbnail?: string;
+  images?: ProductImage[];
+}
 export interface Cart { id: number; items: CartItem[]; totalItems: number; subtotal: number }
 export interface CartItemInput { productId: number; quantity: number }
 
