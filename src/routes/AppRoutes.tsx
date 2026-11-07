@@ -24,6 +24,7 @@ import { AdminCategoriesPage } from '@/pages/admin/AdminCategoriesPage';
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
 import { AdminHeroShowcasePage } from '@/pages/admin/AdminHeroShowcasePage';
+import { AdminChatInboxPage } from '@/pages/admin/AdminChatInboxPage';
 
 const auth = (page: ReactNode) => <AuthLayout>{page}</AuthLayout>;
 
@@ -64,6 +65,7 @@ export function AppRoutes() {
       <Route path="/admin/categories" element={<ProtectedRoute roles={['admin']}><AdminCategoriesPage /></ProtectedRoute>} />
       <Route path="/admin/orders" element={<ProtectedRoute roles={['admin']}><AdminOrdersPage /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminUsersPage /></ProtectedRoute>} />
+      <Route path="/admin/chat" element={<ProtectedRoute roles={['admin']}><AdminChatInboxPage /></ProtectedRoute>} />
       <Route path="/admin/hero-showcase" element={<ProtectedRoute roles={['admin']}><AdminHeroShowcasePage /></ProtectedRoute>} />
 
       {/* Fallback */}

@@ -9,6 +9,7 @@ import {
   FolderTree,
   LogOut,
   Menu,
+  MessageSquare,
   Package,
   Shield,
   Sparkles,
@@ -25,6 +26,7 @@ const links = [
   { to: '/admin/inventory', label: 'Inventory', icon: BarChart3 },
   { to: '/admin/orders', label: 'Orders', icon: ClipboardList },
   { to: '/admin/users', label: 'Users', icon: Users },
+  { to: '/admin/chat', label: 'Support Chat', icon: MessageSquare },
   { to: '/admin/hero-showcase', label: 'Hero Showcase', icon: Sparkles },
 ];
 

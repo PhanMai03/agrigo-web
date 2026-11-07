@@ -30,8 +30,13 @@
 * **Account & Order Management**:
   * Customer profile management and password security.
   * Real-time order tracking with status milestones (`Pending Review`, `Confirmed`, `In Transit`, `Completed`, `Cancelled`).
+* **Live Customer Support Chat**:
+  * Collapsible floating chat widget (`CustomerChatWidget`) with unread badge counter.
+  * 3-second polling interval while open to simulate real-time live messaging.
+  * Automatic read receipt tracking (`/api/chat/rooms/:id/read`).
 
 ### 🛠️ 2. Comprehensive Admin Console
+* **Support Chat Inbox (`/admin/chat`)**: Dual-pane customer service console with unread message badges, customer search, and real-time thread replies.
 * **Product Catalog Management**: Create, edit, set primary images, adjust stock quantities, and toggle product statuses (`active` / `inactive`).
 * **Category Manager**: Organize produce categories with custom imagery, slug management, and descriptions.
 * **Order & Fulfillment Center**: Monitor customer orders, update shipping progress, and process VNPay customer refund confirmations.
@@ -201,3 +206,4 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 
 Built with ❤️ by the **AgriGo Development Team**.  
 Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com).
+

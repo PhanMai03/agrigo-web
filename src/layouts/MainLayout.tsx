@@ -4,6 +4,7 @@ import { Footer, type FooterProps } from '@/components/Footer';
 import { Header, type HeaderProps } from '@/components/Header';
 import { Container, type ContainerProps } from '@/components/Container';
 import { useCart } from '@/features/cart/api/hooks';
+import { CustomerChatWidget } from '@/features/chat/components/CustomerChatWidget';
 
 export type { ContainerProps };
 export { Container };
@@ -41,6 +42,7 @@ export function MainLayout({
         )}
       </motion.main>
       <Footer {...footerProps} />
+      <CustomerChatWidget />
     </div>
   );
 }
